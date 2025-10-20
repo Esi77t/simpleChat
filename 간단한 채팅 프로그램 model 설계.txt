@@ -1,0 +1,39 @@
+간단한 채팅 프로그램 개발
+
+
+
+model
+
+ChatAccount	// 유저 계정
+ㄴ(UUID) String accountId (유저 자동 생성되는 고유 계정)
+ㄴString userId (유저 계정)
+ㄴString password (유저 패스워드)
+ㄴString nickname (유저닉네임)
+ㄴDate/Timestamp createdAt (계정 생성 시간)
+ㄴDate/Timestamp updatedAt (계정 수정 시간)
+
+ChatRoom		// 채팅방
+ㄴ(UUID) String roomId (채팅방 고유 ID)
+ㄴString roomName (채팅방 이름)
+ㄴString roomPassword (채팅방 패스워드(없으면 생략))
+ㄴList<String> participantIds (참여자 목록)
+ㄴString ownerId (방장)
+ㄴDate/Timestamp lastMessageSentAt (채팅목록 정렬 및 업데이트)
+ㄴRoomType[enum] type (채팅방 타입 예) SINGLE, GROUP))
+
+ChatMessage	// 채팅 메시지
+ㄴMessageType[enum] type
+ㄴ(UUID) String messageId
+ㄴChatRoom roomId
+ㄴString senderId
+ㄴString message
+ㄴDate/Timestamp timeStamp
+ㄴList<String> readByAccountsIds
+
+MessageType	// enum
+TALK,
+IMAGE,
+FILE,
+ENTER,
+LEAVE,
+SYSTEM
