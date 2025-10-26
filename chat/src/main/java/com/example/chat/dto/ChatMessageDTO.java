@@ -1,4 +1,4 @@
-package com.example.chat.DTO;
+package com.example.chat.dto;
 
 import com.example.chat.model.MessageType;
 import lombok.Builder;
