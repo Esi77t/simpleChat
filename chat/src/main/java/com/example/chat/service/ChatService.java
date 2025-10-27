@@ -16,7 +16,6 @@ public class ChatService {
     // 채팅 전용으로 처리할 것
     private final ChatRepository chatRepository;
 
-
     // 채팅 생성
     public ChatRoom createChatRoom(String roomName, String ownerId, List<String> participantIds, RoomType type) {
         // ChatRoom 객체 생성
@@ -35,4 +34,7 @@ public class ChatService {
 
         return chatRepository.save(newRoom);
     }
+
+
+    //
 }
