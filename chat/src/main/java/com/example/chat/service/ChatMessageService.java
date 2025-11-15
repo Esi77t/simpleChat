@@ -26,4 +26,23 @@ public class ChatMessageService {
     public List<ChatMessage> getChatHistory(String roomId) {
         return messageRepository.findByRoomIdOrderByTimeStampAsc(roomId);
     }
+
+    // 특정 메시지 읽음 확인 처리
+    @Transactional
+    public int markAsRead(String messageId, String accountId) {
+        // 메시지 조회
+        ChatMessage message = messageRepository.findById(messageId)
+                .orElseThrow(() -> new IllegalArgumentException("Message not found : " + messageId));
+
+        // 이미 읽음 목록에서 해당 accountId가 있는지 확인
+        if (!message.getReadByAccountsIds().contains(accountId)) {
+            // 없으면 읽음 목록에 추가
+            message.getReadByAccountsIds().add(accountId);
+
+            // DB에 없데이트
+            messageRepository.save(message);
+        }
+
+        return message.getReadByAccountsIds().size();
+    }
 }

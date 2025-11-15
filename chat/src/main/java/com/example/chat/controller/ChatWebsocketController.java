@@ -2,6 +2,7 @@ package com.example.chat.controller;
 
 import com.example.chat.dto.ChatMessageRequest;
 import com.example.chat.dto.ChatMessageResponse;
+import com.example.chat.dto.ReadReceiptRequest;
 import com.example.chat.model.ChatAccount;
 import com.example.chat.model.ChatMessage;
 import com.example.chat.model.MessageType;
@@ -60,5 +61,18 @@ public class ChatWebsocketController {
         // STOMP 브로커를 통해 구독자에게 메시지 전파
         // 구독 경로 : /topic/chat/{roomId}
         messagingTemplate.convertAndSend("/topic/chat/" + request.roomId(), response);
+    }
+
+    // 읽음 확인 요청을 받아 DB에 업데이트하고 변경된 읽음 수를 브로드캐스팅한다.
+    // 경로 : /app/chat/read
+    public void markMessageAsRead(ReadReceiptRequest request) {
+        try {
+            // Service를 통해 DB에 읽음 처리 로직 수행(읽음 수 업데이트)
+            int newReadCount = messageService.markAsRead(request.messageId(), request.accountId());
+
+            //
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
     }
 }
