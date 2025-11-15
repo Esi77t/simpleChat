@@ -1,12 +1,20 @@
 package com.example.chat.controller;
 
 import com.example.chat.dto.ChatMessageRequest;
+import com.example.chat.dto.ChatMessageResponse;
+import com.example.chat.model.ChatAccount;
+import com.example.chat.model.ChatMessage;
+import com.example.chat.model.MessageType;
 import com.example.chat.repository.ChatAccountRepository;
 import com.example.chat.service.ChatMessageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
+
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.Optional;
 
 @Controller
 @RequiredArgsConstructor
@@ -21,18 +29,36 @@ public class ChatWebsocketController {
     @MessageMapping("/chat/send")
     public void sendMessage(ChatMessageRequest request) {
         // 닉네임 조회
-
+        Optional<ChatAccount> senderOpt = chatAccountRepository.findByUserId(request.senderId());
+        String nickname = senderOpt.map(ChatAccount::getNickname).orElse("알 수 없는 사용자");
 
         // 메시지 엔티티 생성
-
+        ChatMessage chatMessage = ChatMessage.builder()
+                .roomId(request.roomId())
+                .senderId(request.senderId())
+                .type(request.type() != null ? request.type() : MessageType.TALK)
+                .message(request.message())
+                .timeStamp(LocalDateTime.now())
+                .readByAccountsIds(Collections.singletonList(senderOpt.map(ChatAccount::getAccountId).orElse(null)))
+                .build();
 
         // DB 저장
-
+        ChatMessage savedMessage = messageService.saveMessage(chatMessage);
 
         // 클라 응답 DTO 생성
-
+        ChatMessageResponse response = new ChatMessageResponse(
+                savedMessage.getMessageId(),
+                savedMessage.getRoomId(),
+                savedMessage.getSenderId(),
+                nickname,
+                savedMessage.getType(),
+                savedMessage.getMessage(),
+                savedMessage.getTimeStamp(),
+                savedMessage.getReadByAccountsIds().size()
+        );
 
         // STOMP 브로커를 통해 구독자에게 메시지 전파
         // 구독 경로 : /topic/chat/{roomId}
+        messagingTemplate.convertAndSend("/topic/chat/" + request.roomId(), response);
     }
 }
