@@ -70,9 +70,22 @@ public class ChatWebsocketController {
             // Service를 통해 DB에 읽음 처리 로직 수행(읽음 수 업데이트)
             int newReadCount = messageService.markAsRead(request.messageId(), request.accountId());
 
-            //
-        } catch (Exception e) {
-            throw new RuntimeException(e);
+            // 클라이언트에게 업데이트 된 읽음 수를 보낸다
+            // 경로 : /topic/chat/{roomId}/read_update
+
+            // 메시지를 조회하고 방 고유 ID를 얻는다
+            // 여기서 임시로 메시지 ID에서 정보를 추출한다고 가정, 클라이언트 DTO에 roomId를 추가로 넣거나 할 수 있음
+            // -> ReadReceiptRequest DTO에 roomId 필드를 추가하는 것이 가장 효율적
+
+            // 현재 ChatMessageService에는 messageId만으로 roomId를 조회하는 기능이 없으므로,
+            // 여기서는 클라이언트가 ReadReceiptRequest DTO에 roomId를 포함해서 보낸다고 가정하고 코드를 수정.
+            // 클라이언트에게 보낼 읽음 업데이트 정보 DTO
+            record ReadUpdate(String messageId, int readCount) {}
+
+            // 임시로 MessageID를 사용하여 응답 객체 생성
+            ReadUpdate update = new ReadUpdate(request.messageId(), newReadCount);
+        } catch (IllegalArgumentException e) {
+            System.err.println("Read receipt failed : " + e.getMessage());
         }
     }
 }
