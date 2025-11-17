@@ -15,13 +15,18 @@
     </style>
 </head>
 <body class="bg-gray-100 p-8">
-    <div>
-        <h1>Spring WebSocket Chat Test</h1>
-        <div>
-            <h2>로그인</h2>
-            <div>
-                <input>
+    <div class="max-w-4xl mx-auto bg-white p-6 rounded-xl">
+        <h1 class="text-3xl font-bold mb-6 text-center text-blue-300">Spring WebSocket Chat Test</h1>
+        <div id="login-section" class="mb-8 p-4 border rounded-lg bg-blue-100">
+            <h2 class="text-xl font-semibold mb-3 text-blue-600">로그인 인증</h2>
+            <div class="flex space-x-2">
+                <input type="text" id="userId" placeholder="유저ID" class="p-2 border rounded flex-glow">
+                <input type="password" id="password" placeholder="패스워드" class="p-2 border rounded flex-glow">
+                <button id="login-btn" class="bg-blue-200 horver:bg-blue-400 text-white p-2 rounded w-40">로그인</button>
             </div>
+            <p id="auth-status" class="mt-2 text-sm text-gray-700">상태 : 토큰 없음</p>
+        </div>
+        <div id="chat-section">
         </div>
     </div>
 </body>
