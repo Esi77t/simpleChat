@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.0/sockjs.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <script src="chat_test.js"></script>
     <style>
         .chat-log {
             height: 400px;
@@ -27,6 +28,12 @@
             <p id="auth-status" class="mt-2 text-sm text-gray-700">상태 : 토큰 없음</p>
         </div>
         <div id="chat-section">
+            <h2 class="text-xl font-semibold mb-3 text-blue-600">실시간 채팅</h2>
+            <div id="chat-log" class="chat-log border p-4 mb-4 rounded-lg bg-gray-100"></div>
+            <div>
+                <input type="text" id="message-input" placeholder="메시지 입력" class="p-3 border rounded flex-grow">
+                <button id="send-btn" class="bg-blue-500 hover:bg-blue-600 text-white p-3 rounded w-32">전송</button>
+            </div>
         </div>
     </div>
 </body>
