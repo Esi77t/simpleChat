@@ -163,5 +163,16 @@ document.getElementById("send-btn").addEventListener('click', () => {
 
 // 읽음 확인 요청 로직
 function sendReadReceipt(messageId, roomId) {
-    
+    if (!messageId || !CURRENT_ACCOUNT_ID || !roomId || !STOMP_CLIENT || !STOMP_CLIENT.connected) {
+        return;
+    }
+
+    const readPayload = {
+        messageId: messageId,
+        accountId: CURRENT_ACCOUNT_ID,  // DB 엔티티 ID
+        roomId: roomId                  // 브로드캐스팅용
+    }
+
+    // 서버의 @MessageMapping("/chat/read")로 전송
+    STOMP_CLIENT.send(`/app/chat/read`, {}, JSON.stringify(readPayload));
 }

@@ -1,5 +1,6 @@
 package com.example.chat.config;
 
+import com.example.chat.security.JwtAuthenticationFilter;
 import com.example.chat.security.JwtTokenProvider;
 import com.example.chat.service.CustomUserDetailsService;
 import jakarta.servlet.FilterChain;
@@ -35,6 +36,12 @@ public class SecurityConfig {
     public SecurityConfig(JwtTokenProvider tokenProvider, CustomUserDetailsService userDetailsService) {
         this.tokenProvider = tokenProvider;
         this.userDetailsService = userDetailsService;
+    }
+
+    @Bean
+    public JwtAuthenticationFilter jwtAuthenticationFilter() {
+        // JwtTokenProvider를 주입받아 필터 생성
+        return new JwtAuthenticationFilter(tokenProvider);
     }
 
     @Bean

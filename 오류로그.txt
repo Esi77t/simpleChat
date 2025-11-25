@@ -1,0 +1,5 @@
+2025-11-25T15:29:34.342+09:00  WARN 26716 --- [nio-8080-exec-4] .w.s.m.s.DefaultHandlerExceptionResolver : Resolved [org.springframework.web.HttpMediaTypeNotSupportedException: Content-Type 'text/plain;charset=UTF-8' is not supported]
+└> POSTMAN으로 테스트 중에 발생한 오류 로그. Text로 넣어버려서 발생한 오류로 간단한게 JSON으로 바꿔서 진행해서 문제 해결
+
+2025-11-25T15:39:57.350+09:00  WARN 26716 --- [io-8080-exec-10] o.s.s.c.bcrypt.BCryptPasswordEncoder     : Encoded password does not look like BCrypt
+└> 로그인 시도 시 403이 떠서 생긴 문제로 요청 인증시 필요한 시스템이 없었기 때문에 JwtAuthenticationFilter를 따로 만들어주는 중
