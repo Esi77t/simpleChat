@@ -39,7 +39,7 @@ public class AuthService {
         ChatAccount account = ChatAccount.builder()
                 .userId(request.userId())
                 .nickname(request.nickname())
-                .password(request.password())
+                .password(passwordEncoder.encode(request.password()))
                 .build();
 
         return accountRepository.save(account);

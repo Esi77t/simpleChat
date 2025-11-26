@@ -5,29 +5,30 @@
     <meta http-equiv='X-UA-Compatible' content='IE=edge'>
     <title>채팅 클라이언트 테스트</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.0/sockjs.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
-    <script src="chat_test.js"></script>
     <style>
         .chat-log {
             height: 400px;
             overflow-y: auto;
         }
+        .hidden { display: none; }
     </style>
 </head>
 <body class="bg-gray-100 p-8">
     <div class="max-w-4xl mx-auto bg-white p-6 rounded-xl">
         <h1 class="text-3xl font-bold mb-6 text-center text-blue-300">Spring WebSocket Chat Test</h1>
+        <!-- 로그인 섹션 -->
         <div id="login-section" class="mb-8 p-4 border rounded-lg bg-blue-100">
             <h2 class="text-xl font-semibold mb-3 text-blue-600">로그인 인증</h2>
             <div class="flex space-x-2">
-                <input type="text" id="userId" placeholder="유저ID" class="p-2 border rounded flex-glow">
-                <input type="password" id="password" placeholder="패스워드" class="p-2 border rounded flex-glow">
+                <!-- 빠르게 테스트 하려고 바로 넣어둠 -->
+                <input type="text" id="userId" placeholder="유저ID" class="p-2 border rounded flex-glow" value="user1">
+                <input type="password" id="password" placeholder="패스워드" class="p-2 border rounded flex-glow" value="123">
                 <button id="login-btn" class="bg-blue-200 horver:bg-blue-400 text-white p-2 rounded w-40">로그인</button>
             </div>
             <p id="auth-status" class="mt-2 text-sm text-gray-700">상태 : 토큰 없음</p>
         </div>
-        <div id="chat-section">
+        <!-- 로그인 전엔 안 보이게 수정함 -->
+        <div id="chat-section" class="hidden">
             <h2 class="text-xl font-semibold mb-3 text-blue-600">실시간 채팅</h2>
             <div id="chat-log" class="chat-log border p-4 mb-4 rounded-lg bg-gray-100"></div>
             <div>
@@ -36,5 +37,8 @@
             </div>
         </div>
     </div>
+    <script src="chat_test.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.0/sockjs.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>    
 </body>
 </html>

@@ -2,4 +2,14 @@
 └> POSTMAN으로 테스트 중에 발생한 오류 로그. Text로 넣어버려서 발생한 오류로 간단한게 JSON으로 바꿔서 진행해서 문제 해결
 
 2025-11-25T15:39:57.350+09:00  WARN 26716 --- [io-8080-exec-10] o.s.s.c.bcrypt.BCryptPasswordEncoder     : Encoded password does not look like BCrypt
-└> 로그인 시도 시 403이 떠서 생긴 문제로 요청 인증시 필요한 시스템이 없었기 때문에 JwtAuthenticationFilter를 따로 만들어주는 중
+└> 로그인 시도 시 403이 떠서 생긴 문제로 요청 인증시 필요한 시스템이 없었기 때문에 JwtAuthenticationFilter를 따로 만들어줌
+
+org.springframework.boot.web.server.WebServerException: Unable to start embedded Tomcat
+org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'securityConfig' defined in file [E:\Develop\chat_account\chat\build\classes\java\main\com\example\chat\config\SecurityConfig.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'jwtTokenProvider': Injection of autowired dependencies failed
+org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'jwtTokenProvider': Injection of autowired dependencies failed
+org.springframework.util.PlaceholderResolutionException: Could not resolve placeholder 'jwt.secret-key' in value "${jwt.secret-key}"
+└> application.yml 파일 작성할 때 jwt 라인을 들여쓰기 오류로 생긴 거로 확인하고 이를 수정함
+
+Access to fetch at 'http://localhost:8080/api/auth/login' from origin 'null' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+chat_test.js:41  POST http://localhost:8080/api/auth/login net::ERR_FAILED
+└> CORS문제로 SecurityConfig에 따로 로직을 작성해서 처리

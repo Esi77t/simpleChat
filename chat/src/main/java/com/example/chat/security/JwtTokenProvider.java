@@ -41,7 +41,7 @@ public class JwtTokenProvider {
     }
 
     // 1. 토큰 생성
-    public String createToken(String userId) {
+    private String createToken(String userId) {
         Claims claims = Jwts.claims().setSubject(userId);
         Date now = new Date();
         Date validity = new Date(now.getTime() + expirationTime);
@@ -52,6 +52,11 @@ public class JwtTokenProvider {
                 .setExpiration(validity)
                 .signWith(key, SignatureAlgorithm.HS256)
                 .compact();
+    }
+
+    public String generateToken(Authentication authentication) {
+        String userId = authentication.getName();
+        return createToken(userId);
     }
 
     // 2. HTTP 요청 헤더에서 JWT 토큰 추출 (JwtAuthenticationFilter에서 사용)
