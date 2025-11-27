@@ -1,7 +1,9 @@
 package com.example.chat.service;
 
 import com.example.chat.model.ChatMessage;
+import com.example.chat.repository.ChatAccountRepository;
 import com.example.chat.repository.ChatMessageRepository;
+import com.example.chat.repository.ChatRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,6 +15,8 @@ import java.util.List;
 public class ChatMessageService {
 
     private final ChatMessageRepository messageRepository;
+    private final ChatAccountRepository accountRepository;
+    private final ChatRepository chatRepository;
 
     // 새로운 채팅 메시지를 DB에 저장
     @Transactional

@@ -34,7 +34,4 @@ public class ChatService {
 
         return chatRepository.save(newRoom);
     }
-
-
-    //
 }
