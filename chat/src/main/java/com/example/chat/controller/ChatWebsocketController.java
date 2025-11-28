@@ -3,19 +3,17 @@ package com.example.chat.controller;
 import com.example.chat.dto.ChatMessageRequest;
 import com.example.chat.dto.ChatMessageResponse;
 import com.example.chat.dto.ReadReceiptRequest;
-import com.example.chat.model.ChatAccount;
-import com.example.chat.model.ChatMessage;
-import com.example.chat.model.MessageType;
-import com.example.chat.repository.ChatAccountRepository;
 import com.example.chat.service.ChatMessageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.messaging.handler.annotation.MessageMapping;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Controller;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 
-import java.time.LocalDateTime;
-import java.util.Collections;
-import java.util.Optional;
+import java.util.List;
+import java.util.stream.Collectors;
+
 
 @Controller
 @RequiredArgsConstructor
@@ -23,40 +21,12 @@ public class ChatWebsocketController {
     // SimpMessagingTemplate: 브로커(Broker)로 메시지를 전송하는 역할
     private final SimpMessagingTemplate messagingTemplate;
     private final ChatMessageService messageService;
-    private final ChatAccountRepository chatAccountRepository;  // 닉네임 조회용
 
     // 클라이언트로부터 메시지를 수신하고 처리
     // 경로 : /app/chat/send (WebSocketConfig의 application destination prefix에 의해 결정됨
     @MessageMapping("/chat/send")
     public void sendMessage(ChatMessageRequest request) {
-        // 닉네임 조회
-        Optional<ChatAccount> senderOpt = chatAccountRepository.findByUserId(request.senderId());
-        String nickname = senderOpt.map(ChatAccount::getNickname).orElse("알 수 없는 사용자");
-
-        // 메시지 엔티티 생성
-        ChatMessage chatMessage = ChatMessage.builder()
-                .roomId(request.roomId())
-                .senderId(request.senderId())
-                .type(request.type() != null ? request.type() : MessageType.TALK)
-                .message(request.message())
-                .timeStamp(LocalDateTime.now())
-                .readByAccountsIds(Collections.singletonList(senderOpt.map(ChatAccount::getAccountId).orElse(null)))
-                .build();
-
-        // DB 저장
-        ChatMessage savedMessage = messageService.saveMessage(chatMessage);
-
-        // 클라 응답 DTO 생성
-        ChatMessageResponse response = new ChatMessageResponse(
-                savedMessage.getMessageId(),
-                savedMessage.getRoomId(),
-                savedMessage.getSenderId(),
-                nickname,
-                savedMessage.getType(),
-                savedMessage.getMessage(),
-                savedMessage.getTimeStamp(),
-                savedMessage.getReadByAccountsIds().size()
-        );
+        ChatMessageResponse response = messageService.processAndBroadcastMessage(request);
 
         // STOMP 브로커를 통해 구독자에게 메시지 전파
         // 구독 경로 : /topic/chat/{roomId}
@@ -64,11 +34,13 @@ public class ChatWebsocketController {
     }
 
     // 읽음 확인 요청을 받아 DB에 업데이트하고 변경된 읽음 수를 브로드캐스팅한다.
-    // 경로 : /app/chat/read
+    // 클라 경로 : /app/chat/send 로 요청
+    // 서버 경로 : /topic/chat/{roomId} 로 응답
+    @MessageMapping("/chat/send")
     public void markMessageAsRead(ReadReceiptRequest request) {
         try {
             // Service를 통해 DB에 읽음 처리 로직 수행(읽음 수 업데이트)
-            int newReadCount = messageService.markAsRead(request.messageId(), request.accountId());
+            int newReadCount = messageService.markAsReadAndGetCount(request.messageId(), request.accountId());
 
             // 클라이언트에게 업데이트 된 읽음 수를 보낸다
             // 경로 : /topic/chat/{roomId}/read_update
@@ -87,5 +59,13 @@ public class ChatWebsocketController {
         } catch (IllegalArgumentException e) {
             System.err.println("Read receipt failed : " + e.getMessage());
         }
+    }
+
+    // 채팅방의 이전 메시지 기록을 HTTP GET으로 제공
+    @GetMapping("/api/v1/chat/history/{roomId}")
+    public List<ChatMessageResponse> getChatHistory(@PathVariable String roomId) {
+        return messageService.getChatHistory(roomId).stream()
+                .map(messageService::convertToResponse)
+                .collect(Collectors.toList());
     }
 }
