@@ -16,6 +16,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -69,6 +71,26 @@ public class ChatMessageService {
         return message.getReadByAccountsIds().size();
     }
 
+    // 시스템 메시지를 생성하고 응답 DTO로 반환
+    public ChatMessageResponse createSystemMessage(String roomId, String userId, MessageType type, String customMessage) {
+        ChatAccount sender = accountRepository.findByUserId(userId)
+                .orElse(ChatAccount.builder().nickname("시스템").userId("system").build());
+
+        String fullMessage = sender.getNickname() + customMessage;
+
+        return new ChatMessageResponse(
+                UUID.randomUUID().toString(),
+                roomId,
+                "system",
+                "시스템",
+                type,
+                fullMessage,
+                LocalDateTime.now(),
+                0
+        );
+    }
+
+
     // ChatMessage 엔티티를 ChatMessageResponse DTO로 변환
     public ChatMessageResponse convertToResponse(ChatMessage message) {
         // 닉네임 조회를 위해 ChatAccount가 필요
@@ -90,7 +112,9 @@ public class ChatMessageService {
 
     // 특정 채팅방의 이전 메시지 목록을 불러옴
     @Transactional(readOnly = true)
-    public List<ChatMessage> getChatHistory(String roomId) {
-        return messageRepository.findByRoomIdOrderByTimeStampAsc(roomId);
+    public List<ChatMessageResponse> getChatHistory(String roomId) {
+        return messageRepository.findByRoomIdOrderByTimeStampAsc(roomId).stream()
+                .map(this::convertToResponse)
+                .collect(Collectors.toList());
     }
 }

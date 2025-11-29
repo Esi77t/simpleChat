@@ -64,8 +64,6 @@ public class ChatWebsocketController {
     // 채팅방의 이전 메시지 기록을 HTTP GET으로 제공
     @GetMapping("/api/v1/chat/history/{roomId}")
     public List<ChatMessageResponse> getChatHistory(@PathVariable String roomId) {
-        return messageService.getChatHistory(roomId).stream()
-                .map(messageService::convertToResponse)
-                .collect(Collectors.toList());
+        return messageService.getChatHistory(roomId);
     }
 }

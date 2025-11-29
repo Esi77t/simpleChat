@@ -5,9 +5,11 @@ import com.example.chat.model.RoomType;
 import com.example.chat.repository.ChatRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -33,5 +35,13 @@ public class ChatService {
                 .build();
 
         return chatRepository.save(newRoom);
+    }
+
+    @Transactional(readOnly = true)
+    public List<String> findRoomIdsByUserId(String userId) {
+        return chatRepository.findByParticipantIdsContaining(userId)
+                .stream()
+                .map(ChatRoom::getRoomId)
+                .collect(Collectors.toList());
     }
 }
