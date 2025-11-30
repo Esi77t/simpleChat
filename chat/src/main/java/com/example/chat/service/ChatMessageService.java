@@ -113,7 +113,7 @@ public class ChatMessageService {
     // 특정 채팅방의 이전 메시지 목록을 불러옴
     @Transactional(readOnly = true)
     public List<ChatMessageResponse> getChatHistory(String roomId) {
-        return messageRepository.findByRoomIdOrderByTimeStampAsc(roomId).stream()
+        return messageRepository.findByRoomIdOrderByCreatedAtAsc(roomId).stream()
                 .map(this::convertToResponse)
                 .collect(Collectors.toList());
     }

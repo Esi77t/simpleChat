@@ -34,9 +34,13 @@ public class JwtTokenProvider {
 
     private final UserDetailsService userDetailsService;
 
-    // 시크릿 키를 SecretKye 객체로 변환하고 초기화
+    // 시크릿 키를 SecretKey 객체로 변환하고 초기화
     @PostConstruct
     protected void init() {
+//        System.out.println("============JWT SECRET KEY LOADED=============");
+//        System.out.println("key : " + secretKey);
+//        System.out.println("==============================================");
+
         key = Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
     }
 
@@ -63,7 +67,9 @@ public class JwtTokenProvider {
     public String resolveToken(HttpServletRequest request) {
         String bearerToken = request.getHeader("Authorization");
         if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
-            return bearerToken.substring(7);
+            String token = bearerToken.substring(7);
+
+            return token.trim().replaceAll("^\"|\"$", "");
         }
 
         return null;
@@ -94,6 +100,10 @@ public class JwtTokenProvider {
     // 5. 토큰 유효성 검사
     public boolean validateToken(String token) {
         try {
+//            log.info("========== VALIDATING TOKEN ==========");
+//            log.info("Received Token: [{}]", token);
+//            log.info("====================================");
+
             // 토큰을 파싱하면서 유효성 검사 및 만료 시간 확인
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
             return true;

@@ -28,7 +28,12 @@ public class ChatRoom {
     private String roomName;    // 채팅방 이름
     private String roomPassword;    // 채팅방 비밀번호(없으면 바로 들어갈 수 있게)
 
-    @Transient
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(
+            name = "chat_room_participants",
+            joinColumns = @JoinColumn(name = "room_id")
+    )
+    @Column(name = "participant_id")
     private List<String> participantIds;    // 채팅방 참여자 목록
 
     @Column(nullable = false)

@@ -36,7 +36,7 @@ public class ChatWebsocketController {
     // 읽음 확인 요청을 받아 DB에 업데이트하고 변경된 읽음 수를 브로드캐스팅한다.
     // 클라 경로 : /app/chat/send 로 요청
     // 서버 경로 : /topic/chat/{roomId} 로 응답
-    @MessageMapping("/chat/send")
+    @MessageMapping("/chat/read")
     public void markMessageAsRead(ReadReceiptRequest request) {
         try {
             // Service를 통해 DB에 읽음 처리 로직 수행(읽음 수 업데이트)
