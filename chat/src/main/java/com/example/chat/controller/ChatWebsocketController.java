@@ -12,8 +12,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import java.util.List;
-import java.util.stream.Collectors;
-
 
 @Controller
 @RequiredArgsConstructor
@@ -56,6 +54,14 @@ public class ChatWebsocketController {
 
             // 임시로 MessageID를 사용하여 응답 객체 생성
             ReadUpdate update = new ReadUpdate(request.messageId(), newReadCount);
+
+            // SimpMessagingTemplate을 사용해서 구독채널로 브로드캐스트
+            String destination = "/topic/chat/" + request.roomId() + "/read_update";
+
+            messagingTemplate.convertAndSend(destination, update);
+
+            System.out.println("Read update broadcasted to : " + destination + " with count : " + newReadCount);
+
         } catch (IllegalArgumentException e) {
             System.err.println("Read receipt failed : " + e.getMessage());
         }

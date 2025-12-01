@@ -18,8 +18,6 @@ chat_test.js:41  POST http://localhost:8080/api/auth/login net::ERR_FAILED
 └> CORS문제로 SecurityConfig에 따로 로직을 작성해서 처리
 
 
-Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
-2025-11-30T13:27:54.938+09:00 ERROR 9700 --- [  restartedMain] o.s.boot.SpringApplication               : Application run failed
 org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'webSocketEventListener' defined in file [E:\Develop\chat_account\chat\build\classes\java\main\com\example\chat\config\WebSocketEventListener.class]: Unsatisfied dependency expressed through constructor parameter 1: Error creating bean with name 'chatMessageService' defined in file [E:\Develop\chat_account\chat\build\classes\java\main\com\example\chat\service\ChatMessageService.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'chatMessageRepository' defined in com.example.chat.repository.ChatMessageRepository defined in @EnableJpaRepositories declared on JpaRepositoriesRegistrar.EnableJpaRepositoriesConfiguration: Could not create query for public abstract java.util.List com.example.chat.repository.ChatMessageRepository.findByRoomIdOrderByTimeStampAsc(java.lang.String); Reason: Failed to create query for method public abstract java.util.List com.example.chat.repository.ChatMessageRepository.findByRoomIdOrderByTimeStampAsc(java.lang.String); No property 'timeStamp' found for type 'ChatMessage'
 	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:804) ~[spring-beans-6.2.11.jar:6.2.11]
 	at org.springframework.beans.factory.support.ConstructorResolver.autowireConstructor(ConstructorResolver.java:240) ~[spring-beans-6.2.11.jar:6.2.11]
@@ -121,8 +119,6 @@ Caused by: org.springframework.data.mapping.PropertyReferenceException: No prope
 └> JPA Repository 쿼리 이름 규칙 위반으로 보이므로 Repository 메서드 이름을 변경함 (timeStamp -> CreatedAt)
 
 
-Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
-2025-11-30T13:31:17.080+09:00 ERROR 12856 --- [  restartedMain] o.s.boot.SpringApplication               : Application run failed
 org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'webSocketEventListener' defined in file [E:\Develop\chat_account\chat\build\classes\java\main\com\example\chat\config\WebSocketEventListener.class]: Unsatisfied dependency expressed through constructor parameter 1: Error creating bean with name 'chatMessageService' defined in file [E:\Develop\chat_account\chat\build\classes\java\main\com\example\chat\service\ChatMessageService.class]: Unsatisfied dependency expressed through constructor parameter 2: Error creating bean with name 'chatRepository' defined in com.example.chat.repository.ChatRepository defined in @EnableJpaRepositories declared on JpaRepositoriesRegistrar.EnableJpaRepositoriesConfiguration: Could not create query for public abstract java.util.List com.example.chat.repository.ChatRepository.findByParticipantIdsContaining(java.lang.String); Reason: Failed to create query for method public abstract java.util.List com.example.chat.repository.ChatRepository.findByParticipantIdsContaining(java.lang.String); Could not resolve attribute 'participantIds' of 'com.example.chat.model.ChatRoom'
 	at org.springframework.beans.factory.support.ConstructorResolver.createArgumentArray(ConstructorResolver.java:804) ~[spring-beans-6.2.11.jar:6.2.11]
 	at org.springframework.beans.factory.support.ConstructorResolver.autowireConstructor(ConstructorResolver.java:240) ~[spring-beans-6.2.11.jar:6.2.11]
@@ -220,3 +216,48 @@ Caused by: org.hibernate.query.sqm.PathElementException: Could not resolve attri
 	at org.springframework.data.jpa.repository.query.PartTreeJpaQuery$CountQueryPreparer.<init>(PartTreeJpaQuery.java:370) ~[spring-data-jpa-3.5.4.jar:3.5.4]
 	at org.springframework.data.jpa.repository.query.PartTreeJpaQuery.<init>(PartTreeJpaQuery.java:103) ~[spring-data-jpa-3.5.4.jar:3.5.4]
 	... 66 common frames omitted
+└> JPA 엔티티 매핑과 관련된 문제로 보인다. ChatRoom에서 participantIds라는 필드를 매핑된 속성을 찾을 수 없으므로 @Transient 어노테이션을 제거하고 @ElementCollection을 추가
+
+
+org.springframework.beans.factory.BeanCreationException: Error creating bean with name 'simpAnnotationMethodMessageHandler' defined in class path resource [org/springframework/web/socket/config/annotation/DelegatingWebSocketMessageBrokerConfiguration.class]: Ambiguous mapping found. Cannot map 'chatWebsocketController' bean method 
+public void com.example.chat.controller.ChatWebsocketController.markMessageAsRead(com.example.chat.dto.ReadReceiptRequest)
+to {[MESSAGE],[/chat/send]}: There is already 'chatWebsocketController' bean method
+public void com.example.chat.controller.ChatWebsocketController.sendMessage(com.example.chat.dto.ChatMessageRequest) mapped.
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1826) ~[spring-beans-6.2.11.jar:6.2.11]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:607) ~[spring-beans-6.2.11.jar:6.2.11]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:529) ~[spring-beans-6.2.11.jar:6.2.11]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:339) ~[spring-beans-6.2.11.jar:6.2.11]
+	at org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:373) ~[spring-beans-6.2.11.jar:6.2.11]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:337) ~[spring-beans-6.2.11.jar:6.2.11]
+	at org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:202) ~[spring-beans-6.2.11.jar:6.2.11]
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.instantiateSingleton(DefaultListableBeanFactory.java:1221) ~[spring-beans-6.2.11.jar:6.2.11]
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingleton(DefaultListableBeanFactory.java:1187) ~[spring-beans-6.2.11.jar:6.2.11]
+	at org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingletons(DefaultListableBeanFactory.java:1123) ~[spring-beans-6.2.11.jar:6.2.11]
+	at org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:987) ~[spring-context-6.2.11.jar:6.2.11]
+	at org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:627) ~[spring-context-6.2.11.jar:6.2.11]
+	at org.springframework.boot.web.servlet.context.ServletWebServerApplicationContext.refresh(ServletWebServerApplicationContext.java:146) ~[spring-boot-3.5.6.jar:3.5.6]
+	at org.springframework.boot.SpringApplication.refresh(SpringApplication.java:752) ~[spring-boot-3.5.6.jar:3.5.6]
+	at org.springframework.boot.SpringApplication.refreshContext(SpringApplication.java:439) ~[spring-boot-3.5.6.jar:3.5.6]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:318) ~[spring-boot-3.5.6.jar:3.5.6]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1361) ~[spring-boot-3.5.6.jar:3.5.6]
+	at org.springframework.boot.SpringApplication.run(SpringApplication.java:1350) ~[spring-boot-3.5.6.jar:3.5.6]
+	at com.example.chat.ChatApplication.main(ChatApplication.java:12) ~[main/:na]
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method) ~[na:na]
+	at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77) ~[na:na]
+	at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43) ~[na:na]
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569) ~[na:na]
+	at org.springframework.boot.devtools.restart.RestartLauncher.run(RestartLauncher.java:50) ~[spring-boot-devtools-3.5.6.jar:3.5.6]
+Caused by: java.lang.IllegalStateException: Ambiguous mapping found. Cannot map 'chatWebsocketController' bean method 
+public void com.example.chat.controller.ChatWebsocketController.markMessageAsRead(com.example.chat.dto.ReadReceiptRequest)
+to {[MESSAGE],[/chat/send]}: There is already 'chatWebsocketController' bean method
+public void com.example.chat.controller.ChatWebsocketController.sendMessage(com.example.chat.dto.ChatMessageRequest) mapped.
+	at org.springframework.messaging.handler.invocation.AbstractMethodMessageHandler.registerHandlerMethod(AbstractMethodMessageHandler.java:365) ~[spring-messaging-6.2.11.jar:6.2.11]
+	at org.springframework.messaging.handler.invocation.AbstractMethodMessageHandler.lambda$detectHandlerMethods$1(AbstractMethodMessageHandler.java:318) ~[spring-messaging-6.2.11.jar:6.2.11]
+	at java.base/java.util.LinkedHashMap.forEach(LinkedHashMap.java:721) ~[na:na]
+	at org.springframework.messaging.handler.invocation.AbstractMethodMessageHandler.detectHandlerMethods(AbstractMethodMessageHandler.java:318) ~[spring-messaging-6.2.11.jar:6.2.11]
+	at org.springframework.messaging.handler.invocation.AbstractMethodMessageHandler.afterPropertiesSet(AbstractMethodMessageHandler.java:267) ~[spring-messaging-6.2.11.jar:6.2.11]
+	at org.springframework.web.socket.messaging.WebSocketAnnotationMethodMessageHandler.afterPropertiesSet(WebSocketAnnotationMethodMessageHandler.java:52) ~[spring-websocket-6.2.11.jar:6.2.11]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.invokeInitMethods(AbstractAutowireCapableBeanFactory.java:1873) ~[spring-beans-6.2.11.jar:6.2.11]
+	at org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.initializeBean(AbstractAutowireCapableBeanFactory.java:1822) ~[spring-beans-6.2.11.jar:6.2.11]
+	... 23 common frames omitted
+└> WebSocket 컨트롤러에서 메시지 매핑이 중복되서 생긴 오류. ChatWebsocketController의 @MessageMapping의 경로를 다르게 설정
