@@ -4,7 +4,6 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -28,6 +27,5 @@ public class ChatMessage {
 
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "message_read_status", joinColumns = @JoinColumn(name = "message_id"))
-    @Builder.Default
-    private List<String> readByAccountsIds = new ArrayList<>();
+    private List<String> readByAccountsIds;
 }

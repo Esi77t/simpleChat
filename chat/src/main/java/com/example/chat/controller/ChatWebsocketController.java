@@ -38,7 +38,6 @@ public class ChatWebsocketController {
     // 서버 경로 : /topic/chat/{roomId} 로 응답
     @MessageMapping("/chat/read")
     public void markMessageAsRead(ReadReceiptRequest request) {
-        System.out.println(">>> [SERVER DEBUG] Received /chat/read request for message: " + request.messageId());
         try {
             // Service를 통해 DB에 읽음 처리 로직 수행(읽음 수 업데이트)
             int newReadCount = messageService.markAsReadAndGetCount(request.messageId(), request.accountId());
@@ -54,12 +53,14 @@ public class ChatWebsocketController {
             // 여기서는 클라이언트가 ReadReceiptRequest DTO에 roomId를 포함해서 보낸다고 가정하고 코드를 수정.
             // 클라이언트에게 보낼 읽음 업데이트 정보 DTO
             record ReadUpdate(String messageId, int readCount) {}
+
             // 임시로 MessageID를 사용하여 응답 객체 생성
             ReadUpdate update = new ReadUpdate(request.messageId(), newReadCount);
 <<<<<<< HEAD
 
             // SimpMessagingTemplate을 사용해서 구독채널로 브로드캐스트
             String destination = "/topic/chat/" + request.roomId() + "/read_update";
+
             messagingTemplate.convertAndSend(destination, update);
 
             System.out.println("Read update broadcasted to : " + destination + " with count : " + newReadCount);
