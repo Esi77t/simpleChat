@@ -1,7 +1,7 @@
 // 글로벌 설정
 const API_BASE_URL = "http://localhost:8080/api";
 const WS_URL = "http://localhost:8080/ws";
-const DEFAULT_ROOM_ID = "dcbd3c46-3b40-449e-a2ac-eaf4bdda8256"; // 별도의 입력 필드가 없으니까 기본 방을 하드코딩
+const DEFAULT_ROOM_ID = "75daf69d-2d5a-4cad-9d45-2563bf191958"; // 별도의 입력 필드가 없으니까 기본 방을 하드코딩
 
 // 상태 변수
 let AUTH_TOKEN = null;

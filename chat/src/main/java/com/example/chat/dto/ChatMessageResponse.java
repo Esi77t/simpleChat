@@ -1,11 +1,13 @@
 package com.example.chat.dto;
 
 import com.example.chat.model.MessageType;
+import lombok.With;
 
 import java.time.LocalDateTime;
 
 // 서버가 클라이언트로 메시지 전송 시 사용하는 DTO
 // ChatMessage 엔티티와 달리 필요한 정보만 담음
+@With
 public record ChatMessageResponse(
         String messageId,
         String roomId,
