@@ -10,10 +10,7 @@
             height: 400px;
             overflow-y: auto;
         }
-
-        .hidden {
-            display: none;
-        }
+        .hidden { display: none; }
     </style>
 </head>
 <body class="bg-gray-100 p-8">
@@ -25,8 +22,7 @@
             <div class="flex space-x-2">
                 <!-- 빠르게 테스트 하려고 바로 넣어둠 -->
                 <input type="text" id="userId" placeholder="유저ID" class="p-2 border rounded flex-glow" value="user1">
-                <input type="password" id="password" placeholder="패스워드" class="p-2 border rounded flex-glow"
-                    value="123">
+                <input type="password" id="password" placeholder="패스워드" class="p-2 border rounded flex-glow" value="123">
                 <button id="login-btn" class="bg-blue-200 horver:bg-blue-400 text-white p-2 rounded w-40">로그인</button>
             </div>
             <p id="auth-status" class="mt-2 text-sm text-gray-700">상태 : 토큰 없음</p>
@@ -43,6 +39,6 @@
     </div>
     <script src="chat_test.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/sockjs-client/1.5.0/sockjs.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/stomp.js/2.3.3/stomp.min.js"></script>    
 </body>
 </html>
