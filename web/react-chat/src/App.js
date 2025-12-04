@@ -5,6 +5,14 @@ import { Navigate, Route, BrowserRouter as Router, Routes } from 'react-router-d
 import LoginPage from './pages/LoginPage';
 import ChatRoomPage from './pages/ChatRoomPage';
 
+const PretendardStyles = `
+    @import url("https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/static/pretendard.min.css");
+
+    body {
+        font-family: "Pretendard Variable", Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, "Helvetica Neue", "Segoe UI", "Apple SD Gothic Neo", "Noto Sans KR", "Malgun Gothic", "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", sans-serif !important;
+    }
+`;
+
 function App() {
     const { isAuthenticated, accountId, login, logout } = useAuth();
 
