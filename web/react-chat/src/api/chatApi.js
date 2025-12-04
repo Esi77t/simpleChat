@@ -10,6 +10,16 @@ const API_BASE_URL = "http://localhost:8080/api/v1/chat";
  * @returns {Promise<Array<Object>>} 메시지 객체 배열
  */
 export const fetchInitialMessages = async (roomId, size = 50, beforeMessageId = null) => {
+
+    const token = localStorage.getItem('jwt_token');
+
+    if (!token) {
+        console.error("Authentication Token not found. Cannot fetch messages");
+        return [];
+    }
+
+    console.log("REST Call Token Found (First 20 Chars) : ", token.substring(0, 20) + "...");
+
     try {
         const response = await axios.get(`${API_BASE_URL}/rooms/${roomId}/messages`, {
             params: {
@@ -17,19 +27,26 @@ export const fetchInitialMessages = async (roomId, size = 50, beforeMessageId = 
                 before: beforeMessageId     // 백엔드에서 이 파라미터를 처리할 예정
             },
             headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`
+                Authorization: `Bearer ${token}`,
             }
         });
 
-        return response.data.map(serverMsg => ({
-            messageId: serverMsg.messageId,
-            senderId: serverMsg.senderId,
-            content: serverMsg.message,     // 백엔드의 'message' 필드를 클라이언트의 'content'로 매핑
-            readCount: serverMsg.readByAccountsIds ? serverMsg.readByAccountsIds.length : 1, // 초기 읽음 수
-            timestamp: serverMsg.createdAt,
-        }));
+        console.log("Initial messages loaded successfully.", response.data.length, "messages.");
+        return response.data
+        //     .map(serverMsg => ({
+        //     messageId: serverMsg.messageId,
+        //     senderId: serverMsg.senderId,
+        //     content: serverMsg.message,     // 백엔드의 'message' 필드를 클라이언트의 'content'로 매핑
+        //     readCount: serverMsg.readByAccountsIds ? serverMsg.readByAccountsIds.length : 1, // 초기 읽음 수
+        //     timestamp: serverMsg.createdAt,
+        // }));
     } catch (error) {
-        console.error("Error fetching initial messages:", error);
+        if (error.response) {
+            console.error("API Error Status:", error.response.status);
+            console.error("API Error Data:", error.response.data);
+        } else {
+            console.error("Network or Unknown Error:", error.message);
+        }
         return [];
     }
 }

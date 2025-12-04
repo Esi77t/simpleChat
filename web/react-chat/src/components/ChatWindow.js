@@ -63,3 +63,5 @@ const ChatWindow = ({ roomId }) => {
         </div>
     )
 }
+
+export default ChatWindow;

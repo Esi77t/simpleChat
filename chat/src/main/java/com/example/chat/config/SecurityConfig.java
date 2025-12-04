@@ -81,7 +81,7 @@ public class SecurityConfig {
                                 "/api/auth/**",
                                 "/h2-console/**",
                                 "/ws/**",
-                                "/topic/**"
+                                "/api/v1/chat/rooms/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )

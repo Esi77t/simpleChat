@@ -1,39 +1,53 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import useStomp from "./useStomp";
 import { fetchInitialMessages } from "../api/chatApi";
+import useAuth from "./useAuth";
 
 // 읽음 요청이 서버로 중복 전송되는 것을 막는 용도
 const readRequestCache = new Set();
 
-const useChatRoom = (roomId, currentAccountId) => {
+const useChatRoom = (roomId) => {
+
+    const { accountId: currentAccountId, isAuthenticated } = useAuth();
+
     const [messages, setMessages] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
 
     const WS_URL = "http://localhost:8080/ws";
     const { isConnected, subscribe, send } = useStomp(WS_URL);
 
-    // REST API를 통해서 채팅방 초기 메시지를 불러오기
-    useState(() => {
-        if (roomId && currentAccountId && !messages.length) {
-            setIsLoading(true);
-            fetchInitialMessages(roomId)
-                .then(data => {
-                    setMessages(data);
-                    setIsLoading(false);
-                });
-        }
-    }, [roomId, currentAccountId]);
-
     // === 웹소켓 메시지 수신 핸들러 ===
     // 새 메시지 수신 처리 (/topic/chat/{roomId})
-    const handleNewMessage = (newMessage) => {
-        setMessages(prevMessage => [...prevMessage, newMessage]);
-    };
+    const handleNewMessage = useCallback((messagePayload) => {
+        let newMessage;
+        try {
+            newMessage = JSON.parse(messagePayload.body);
+        } catch (error) {
+            console.error("Failed to parse new message payload : ", messagePayload);
+            return;
+        }
+
+        // 새 메시지를 기존 목록에 추가
+        setMessages(prevMessage => [...prevMessage, {
+            messagesId: newMessage.messageId,
+            senderId: newMessage.senderId,
+            content: newMessage.message,
+            readCount: newMessage.readByAccountsIds ? newMessage.readByAccountsIds.length : 1,
+            timestamp: newMessage.createdAt,
+        }]);
+    }, []);
 
     // 읽음 수 업데이트 처리 (/topic/chat/{roomId}/read_update)
-    const handleReadUpdate = (readUpdate) => {
-        const { messageId, readCount } = readUpdate;
+    const handleReadUpdate = useCallback((readUpdatePayload) => {
+        let readUpdate;
+        try {
+            readUpdate = JSON.parse(readUpdatePayload.body);
+        } catch (error) {
+            console.error("Failed to parse read update payload: ", readUpdatePayload);
+            return;
+        }
 
+        const { messageId, readCount } = readUpdate;
         setMessages(prevMessage => {
             return prevMessage.map(msg => {
                 if (msg.messageId === messageId) {
@@ -45,23 +59,41 @@ const useChatRoom = (roomId, currentAccountId) => {
                 return msg;
             });
         });
-    };
+    }, []);
+
+    // REST API를 통해서 채팅방 초기 메시지를 불러오기
+    useEffect(() => {
+        // 로그인 상태일 때만 메시지를 불러옴
+        if (roomId && currentAccountId && isAuthenticated) {
+            setIsLoading(true);
+            fetchInitialMessages(roomId)
+                .then(data => {
+                    setMessages(data.reverse());
+                })
+                .catch(error => {
+                    console.error("초기 메시지 로딩 실패 : ", error);
+                })
+                .finally(() => {
+                    setIsLoading(false);
+                });
+        }
+    }, [roomId, currentAccountId, isAuthenticated, messages.length]);
 
     // === 구독 연결 관리 ===
     useEffect(() => {
-        if (isConnected && roomId) {
+        // 연결, 인증 상태가 모두 참일 때만 구독
+        if (isConnected && isAuthenticated && roomId) {
             // 메시지 수신 채널 구독
             subscribe(`/topic/chat/${roomId}`, handleNewMessage);
-
             // 읽음 수 업데이트 채널 구독
             subscribe(`/topic/chat/${roomId}/read_update`, handleReadUpdate);
         }
-    }, [isConnected, roomId, subscribe]);
+    }, [isConnected, isAuthenticated, roomId, subscribe, handleNewMessage, handleReadUpdate]);
 
     // === 읽음/전송 액션 함수 ===
     // 읽음 요청 전송 (클라이언트 중복 방지 로직도 포함)
     const markMessageAsRead = (messageId) => {
-        if (!isConnected) return;
+        if (!isConnected || !currentAccountId || !roomId) return;  // 인증 되지 않으면 실행 불가
 
         // 이미 요청을 보낸 메시지는 다시 보내지 않는다
         if (readRequestCache.has(messageId)) return;
@@ -81,7 +113,7 @@ const useChatRoom = (roomId, currentAccountId) => {
 
     // 메시지 전송
     const sendMessage = (messageContent) => {
-        if (!isConnected || !messageContent.trim()) return;
+        if (!isConnected || !messageContent.trim() || !currentAccountId) return;    // 인증체크 추가함
 
         const chatMessage = {
             roomId: roomId,
@@ -97,6 +129,7 @@ const useChatRoom = (roomId, currentAccountId) => {
         isLoading,
         messages,
         isConnected,
+        currentAccountId,   // 외부에서도 사용할 수 있게 반환함
         sendMessage,
         markMessageAsRead,
     };

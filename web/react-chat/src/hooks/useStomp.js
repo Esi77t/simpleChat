@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react"
 import SockJS from "sockjs-client";
-import Stomp from "stompjs";
+
+const Stomp = require('stompjs/lib/stomp').Stomp;
 
 const useStomp = (wsUrl, options ={}) => {
     const [isConnected, setIsConnected] = useState(false);
@@ -24,6 +25,12 @@ const useStomp = (wsUrl, options ={}) => {
                 stompClientRef.current.debug = null;
             }
 
+            const token = localStorage.getItem('jwt_token');
+            const headers = {};
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+
             stompClientRef.current.connect(
                 { login, passcode },    // 헤더(인증정보)
                 (frame) => {
@@ -45,7 +52,7 @@ const useStomp = (wsUrl, options ={}) => {
             console.error("WebSocket Initialization Error : ", error);
             setIsConnected(false);
         }
-    }, [wsUrl, debug, onConnect, login, passcode]);
+    }, [wsUrl, debug, onConnect]);
 
     // 채널 구독
     const subscribe = useCallback((topic, callback) => {
@@ -82,11 +89,20 @@ const useStomp = (wsUrl, options ={}) => {
     // 연결 해제
     const disconnect = useCallback(() => {
         if (stompClientRef.current) {
-            stompClientRef.current.disconnect(() => {
+            const client = stompClientRef.current;
+
+            if (client.ws && client.ws.readyState === 1) {
+                stompClientRef.current.disconnect(() => {
+                    setIsConnected(false);
+                    stompClientRef.current = null;
+                    subscriptionsRef.current = {};
+                });
+            } else {
                 setIsConnected(false);
                 stompClientRef.current = null;
                 subscriptionsRef.current = {};
-            });
+            }
+
         }
     }, []);
 
