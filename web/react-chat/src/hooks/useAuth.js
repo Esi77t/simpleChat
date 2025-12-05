@@ -1,7 +1,7 @@
 import axios from "axios";
 import { useEffect, useState } from "react"
 
-const AUTH_API_URL = "http://localhost:8080/api/v1/auth"
+const REAL_TOKEN_FOR_TESTING = "YOUR_ACTUAL_JWT_TOKEN_HERE";
 
 const useAuth = () => {
     const [accountId, setAccountId] = useState(null);
@@ -23,49 +23,36 @@ const useAuth = () => {
 
     // 로그인 함수 처리
     const login = async (userId, password) => {
-        try {
-            const response = await axios.post(`${AUTH_API_URL}/login`, { userId, password });
-            const receivedJwtToken = response.data.token;
-            const actualAccountId = response.data.accountId;
-            const actualNickname = response.data.nickname;
+        console.log(`[AUTH] 로그인 시도 : ${userId}`);
 
-            localStorage.setItem('jwt_token', receivedJwtToken);
-            localStorage.setItem('accountId', actualAccountId);
-            localStorage.setItem('nickname', actualNickname);
+        // 실제 API 호출 로직으로 교체 예정
+        const receivedJwtToken = (REAL_TOKEN_FOR_TESTING === "YOUR_ACTUAL_JWT_TOKEN_HERE") ? ('mock-jwt-token-for-' + userId) : REAL_TOKEN_FOR_TESTING;
 
-            setAccountId(actualAccountId);
-            setNickname(actualNickname);
-            setIsAuthenticated(true);
-            return true;
-        } catch (error) {
-            console.error("Login failed: ", error);
-            return false;
-        }
+        // 임시 더미 데이터
+        const dummyAccountId = 'user-' + userId.toLowerCase();
+        const dummyNickname = userId;
 
-        // // 임시 더미 데이터
-        // const dummyAccountId = 'user-' + userId.toLowerCase();
-        // const dummyNickname = userId;
+        // 성공했을 때
+        localStorage.setItem('accountId', dummyAccountId);
+        localStorage.setItem('nickname', dummyNickname);
+        localStorage.setItem('jwt_token', receivedJwtToken);
 
-        // const receivedJwtToken = 'mock-jwt-token-for' + userId;
-
-        // // 성공했을 때
-        // localStorage.setItem('accountId', dummyAccountId);
-        // localStorage.setItem('nickname', dummyNickname);
-        // localStorage.setItem('jwt_token', receivedJwtToken);
-
-        // setAccountId(dummyAccountId);
-        // setNickname(dummyNickname);
-        // setIsAuthenticated(true);
-        // return true;
+        setAccountId(dummyAccountId);
+        setNickname(dummyNickname);
+        setIsAuthenticated(true);
+        console.log(`[AUTH] 로그인 성공. 토큰 : ${receivedJwtToken.substring(0, 20)}...`);
+        return true;
     }
 
     // 로그아웃 함수 처리
     const logout = async () => {
         localStorage.removeItem('accountId');
         localStorage.removeItem('nickname');
+        localStorage.removeItem('jwt_token');
         setAccountId(null);
         setNickname(null);
         setIsAuthenticated(false);
+        console.log("[AUTH] 로그아웃 완료");
     }
 
     return { accountId, nickname, isAuthenticated, login, logout };

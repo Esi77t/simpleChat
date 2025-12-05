@@ -1,60 +1,53 @@
 import axios from "axios";
 
-const API_BASE_URL = "http://localhost:8080/api/v1/chat";
+const mockRooms = [
+    { id: 'room-1', name: '일반 채팅방 (1)', users: 15, creator: 'admin' },
+    { id: 'room-2', name: '자유 토론방 (2)', users: 7, creator: 'user-alice' },
+    { id: 'room-3', name: '기술 Q&A (3)', users: 22, creator: 'user-bob' },
+    { id: 'room-4', name: 'React 개발 스터디 (4)', users: 10, creator: 'user-charlie' },
+];
 
-/**
- * 특정 채팅방의 초기 메시지 목록을 조회.
- * @param {string} roomId - 조회할 채팅방 ID
- * @param {number} size - 불러올 메시지 수
- * @param {string} beforeMessageId - 특정 메시지 이전의 메시지를 조회할 때 사용하는 ID (무한 스크롤 구현 시 사용)
- * @returns {Promise<Array<Object>>} 메시지 객체 배열
- */
-export const fetchInitialMessages = async (roomId, size = 50, beforeMessageId = null) => {
-
-    const token = localStorage.getItem('jwt_token');
-
-    if (!token) {
-        console.error("Authentication Token not found. Cannot fetch messages");
-        return [];
-    }
-
-    console.log("REST Call Token Found (First 20 Chars) : ", token.substring(0, 20) + "...");
-
-    try {
-        const response = await axios.get(`${API_BASE_URL}/rooms/${roomId}/messages`, {
-            params: {
-                size: size,
-                before: beforeMessageId     // 백엔드에서 이 파라미터를 처리할 예정
-            },
-            headers: {
-                Authorization: `Bearer ${token}`,
-            }
+const chatApi = {
+    signup: async ({ userId, password, nickname }) => {
+        console.log(`[API] 회원가입 시도 : ${userId}, ${nickname}`);
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                if (userId === 'admin') {
+                    resolve({ success: false, message: "이미 존재하는 사용자 ID입니다." });
+                } else {
+                    resolve({ success: true, message: `${nickname}님, 회원가입에 성공했습니다. 로그인 해주세요.` });
+                }
+            }, 500);
         });
+    },
 
-        console.log("Initial messages loaded successfully.", response.data.length, "messages.");
-        return response.data
-        //     .map(serverMsg => ({
-        //     messageId: serverMsg.messageId,
-        //     senderId: serverMsg.senderId,
-        //     content: serverMsg.message,     // 백엔드의 'message' 필드를 클라이언트의 'content'로 매핑
-        //     readCount: serverMsg.readByAccountsIds ? serverMsg.readByAccountsIds.length : 1, // 초기 읽음 수
-        //     timestamp: serverMsg.createdAt,
-        // }));
-    } catch (error) {
-        if (error.response) {
-            console.error("API Error Status:", error.response.status);
-            console.error("API Error Data:", error.response.data);
-        } else {
-            console.error("Network or Unknown Error:", error.message);
-        }
-        return [];
+    createRoom: async (roomName, token) => {
+        console.log(`[API] 채팅방 생성시도 : ${roomName}`);
+        return new Promise((resolve, reject) => {
+            setTimeout(() => {
+                if (roomName.length < 3) {
+                    reject({ status: 400, message: "방 제목은 최소 3글자 이상이어야 합니다." });
+                } else if (roomName.includes("비밀")) {
+                    reject({ status: 403, message: "채팅방 생성 권한이 없습니다. (Mock 403 Test)" });
+                } else {
+                    resolve({
+                        success: true,
+                        roomId: 'new-room-' + Math.random().toString(36).substring(2, 9),
+                        message: `채팅방 [${roomName}]이 성공적으로 생성되었습니다.`
+                    });
+                }
+            }, 800);
+        });
+    },
+
+    getRooms: async (token) => {
+        console.log(`[API] 채팅방 목록 조회 시도. Token : ${token ? token.substring(0, 10) + '...' : 'N/A'}`);
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                resolve({ success: true, rooms: mockRooms });
+            }, 1000);
+        });
     }
 }
 
-const fetchChatRoom = async (roomId, accountId) => {
-
-}
-
-const createChatRoom = async (roomId) => {
-
-}
+export default chatApi;
