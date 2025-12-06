@@ -16,7 +16,7 @@ const PretendardStyles = `
 `;
 
 const CustomStyles = `
-    /* -------------------- 5.1. 전역 레이아웃 스타일 -------------------- */
+    /* 전역 레이아웃 스타일 */
     .app-root {
         min-height: 100vh;
         background-color: #f3f4f6;
@@ -37,7 +37,7 @@ const CustomStyles = `
         gap: 1.5rem; 
     }
     
-    /* -------------------- 5.2. Form 공통 스타일 -------------------- */
+    /* Form 공통 스타일 */
     .form-container {
         width: 100%;
         max-width: 24rem;
@@ -69,7 +69,7 @@ const CustomStyles = `
     .signup-form-color .input-field:focus { outline: 2px solid #059669; border-color: #059669; }
 
 
-    /* -------------------- 5.3. LobbyPage (Rooms) 스타일 -------------------- */
+    /* LobbyPage (Rooms) 스타일 */
     .rooms-header { display: flex; justify-content: space-between; align-items: center; padding-bottom: 1rem; border-bottom: 1px solid #e5e7eb; }
     .rooms-title { font-size: 1.875rem; font-weight: 800; }
     .rooms-title-color { color: #4338ca; }
@@ -93,7 +93,7 @@ const CustomStyles = `
     .room-enter-button { padding: 0.5rem 1rem; background-color: #10b981; color: white; border: none; border-radius: 0.5rem; font-weight: 600; cursor: pointer; transition: background-color 0.2s; }
     .room-enter-button:hover { background-color: #059669; }
 
-    /* -------------------- 5.4. ChatPage 스타일 -------------------- */
+    /* ChatPage 스타일 */
     .chat-page-container {
         max-width: 80rem; 
         height: 80vh; /* 채팅창은 높이가 고정되어야 스크롤이 자연스러움 */
@@ -147,7 +147,7 @@ const CustomStyles = `
     .small-text { font-size: 0.75rem; margin-top: 1rem; }
 
 
-    /* -------------------- 5.5. Utility Classes & Animations -------------------- */
+    /* Utility Classes & Animations */
     .space-y-4 > * + * { margin-top: 1rem; }
     .flex-col-space-y-6 > * + * { margin-top: 1.5rem; }
     .flex-items-center { display: flex; align-items: center; }
@@ -163,6 +163,120 @@ const CustomStyles = `
     .spinner { display: inline-block; width: 1.25rem; height: 1.25rem; border-radius: 50%; border: 2px solid rgba(255, 255, 255, 0.2); border-bottom-color: #fff; animation: spin 1s linear infinite; }
     .spinner-large { display: inline-block; width: 2rem; height: 2rem; border-radius: 50%; border: 4px solid rgba(100, 116, 139, 0.2); border-bottom-color: #4f46e5; animation: spin 1s linear infinite; margin-bottom: 0.5rem; }
     @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ChatWindow.js 스타일 */
+    .chat-window {
+        flex-grow: 1;
+        overflow-y: auto;
+        padding: 1rem;
+        background-color: #e5e7eb; /* bg-gray-200 */
+        display: flex;
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    /* 메시지 컨테이너: 정렬 담당 */
+    .message-container {
+        display: flex;
+        width: 100%;
+    }
+    .message-other {
+        justify-content: flex-start;
+    }
+    .message-mine {
+        justify-content: flex-end;
+    }
+    
+    /* 메시지 내용: 닉네임, 버블, 시간 */
+    .message-content {
+        max-width: 75%; /* 말풍선 최대 폭 제한 */
+        display: flex;
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .message-mine .message-content {
+        align-items: flex-end;
+    }
+    .message-nickname {
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: #4b5563; /* text-gray-600 */
+        margin-bottom: 0.2rem;
+    }
+    .message-mine .message-nickname {
+        display: none; /* 내가 보낸 메시지는 닉네임 표시 안함 */
+    }
+    .message-bubble {
+        padding: 0.75rem;
+        border-radius: 1rem;
+        box-shadow: 0 1px 1px rgba(0, 0, 0, 0.05);
+        display: inline-block;
+        max-width: 100%;
+        word-break: break-word; /* 긴 텍스트 줄바꿈 처리 */
+    }
+    .message-other .message-bubble {
+        background-color: white;
+        border-bottom-left-radius: 0;
+        color: #1f2937;
+    }
+    .message-mine .message-bubble {
+        background-color: #4f46e5; /* bg-indigo-600 */
+        color: white;
+        border-bottom-right-radius: 0;
+    }
+    .message-text {
+        margin: 0;
+    }
+    .message-time {
+        font-size: 0.7rem;
+        color: #6b7280; /* text-gray-500 */
+        margin-top: 0.2rem;
+    }
+    .message-mine .message-time {
+        color: #4f46e5; /* 내가 보낸 메시지 시간은 색깔 다르게 */
+    }
+
+
+    /* MessageInput.js 스타일 */
+    .message-input-area {
+        display: flex;
+        padding: 1rem;
+        background-color: #f9fafb; /* bg-gray-50 */
+        border-top: 1px solid #e5e7eb;
+        border-radius: 0 0 0.75rem 0.75rem;
+    }
+    .message-input {
+        flex-grow: 1;
+        margin-right: 0.75rem;
+        border: 1px solid #d1d5db;
+        border-radius: 0.5rem;
+        padding: 0.75rem;
+        transition: box-shadow 0.2s;
+    }
+    .message-input:focus {
+        border-color: #4f46e5;
+        box-shadow: 0 0 0 1px #4f46e5;
+        outline: none;
+    }
+    .send-button {
+        white-space: nowrap;
+        padding: 0.75rem 2.25rem;
+        background-color: #4f46e5;
+        color: white;
+        border: none;
+        border-radius: 0.5rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        text-align: center;
+    }
+    .send-button:hover:not(:disabled) {
+        background-color: #4338ca;
+    }
+    .send-button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+    }
 `;
 
 function App() {

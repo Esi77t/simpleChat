@@ -1,138 +1,114 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import useStomp from "./useStomp";
 import { fetchInitialMessages } from "../api/chatApi";
 import useAuth from "./useAuth";
 
-// 읽음 요청이 서버로 중복 전송되는 것을 막는 용도
-const readRequestCache = new Set();
+// Mock 채팅 메시지
+const initialMessages = []; 
 
-const useChatRoom = (roomId) => {
+// 가짜 STOMP 서버 역할
+const mockStompSubscribers = {};
+let messageIdCounter = 4;
 
-    const { accountId: currentAccountId, isAuthenticated } = useAuth();
+const useChatRoom = (roomId, currentUserId, currentNickname) => {
 
-    const [messages, setMessages] = useState([]);
-    const [isLoading, setIsLoading] = useState(true);
+ const [messages, setMessages] = useState(initialMessages);
+    const [isConnected, setIsConnected] = useState(false);
+    const wsRef = useRef(null); // WebSocket 인스턴스를 저장할 Ref
 
-    const WS_URL = "http://localhost:8080/ws";
-    const { isConnected, subscribe, send } = useStomp(WS_URL);
+    // 메시지 수신 함수
+    const receiveMessage = useCallback((message) => {
+        setMessages(prevMessages => {
+            // Echo 서버는 자신이 보낸 메시지를 그대로 되돌려주기 때문에, 
+            // 중복 처리 로직이 필요합니다. (최대 1초 내에 동일 메시지 방지)
+            const isDuplicate = prevMessages.some(m => 
+                m.text === message.text && 
+                m.senderId === message.senderId && 
+                (Date.now() - new Date(m.timestamp).getTime() < 1000)
+            );
 
-    // === 웹소켓 메시지 수신 핸들러 ===
-    // 새 메시지 수신 처리 (/topic/chat/{roomId})
-    const handleNewMessage = useCallback((messagePayload) => {
-        let newMessage;
-        try {
-            newMessage = JSON.parse(messagePayload.body);
-        } catch (error) {
-            console.error("Failed to parse new message payload : ", messagePayload);
-            return;
-        }
-
-        // 새 메시지를 기존 목록에 추가
-        setMessages(prevMessage => [...prevMessage, {
-            messagesId: newMessage.messageId,
-            senderId: newMessage.senderId,
-            content: newMessage.message,
-            readCount: newMessage.readByAccountsIds ? newMessage.readByAccountsIds.length : 1,
-            timestamp: newMessage.createdAt,
-        }]);
-    }, []);
-
-    // 읽음 수 업데이트 처리 (/topic/chat/{roomId}/read_update)
-    const handleReadUpdate = useCallback((readUpdatePayload) => {
-        let readUpdate;
-        try {
-            readUpdate = JSON.parse(readUpdatePayload.body);
-        } catch (error) {
-            console.error("Failed to parse read update payload: ", readUpdatePayload);
-            return;
-        }
-
-        const { messageId, readCount } = readUpdate;
-        setMessages(prevMessage => {
-            return prevMessage.map(msg => {
-                if (msg.messageId === messageId) {
-                    return {
-                        ...msg,
-                        readCount: readCount
-                    };
-                }
-                return msg;
-            });
+            if (isDuplicate) return prevMessages;
+            return [...prevMessages, message];
         });
     }, []);
 
-    // REST API를 통해서 채팅방 초기 메시지를 불러오기
+    // 🌟 Native WebSocket 연결/구독
     useEffect(() => {
-        // 로그인 상태일 때만 메시지를 불러옴
-        if (roomId && currentAccountId && isAuthenticated) {
-            setIsLoading(true);
-            fetchInitialMessages(roomId)
-                .then(data => {
-                    setMessages(data.reverse());
-                })
-                .catch(error => {
-                    console.error("초기 메시지 로딩 실패 : ", error);
-                })
-                .finally(() => {
-                    setIsLoading(false);
-                });
-        }
-    }, [roomId, currentAccountId, isAuthenticated, messages.length]);
+        // 공개 에코 서버를 사용하여 연결 테스트
+        // 실제 백엔드 사용 시: ws://localhost:8080/chat
+        const wsUrl = 'wss://echo.websocket.org'; 
+        console.log(`[WebSocket] ${wsUrl}에 연결 시도...`);
 
-    // === 구독 연결 관리 ===
-    useEffect(() => {
-        // 연결, 인증 상태가 모두 참일 때만 구독
-        if (isConnected && isAuthenticated && roomId) {
-            // 메시지 수신 채널 구독
-            subscribe(`/topic/chat/${roomId}`, handleNewMessage);
-            // 읽음 수 업데이트 채널 구독
-            subscribe(`/topic/chat/${roomId}/read_update`, handleReadUpdate);
-        }
-    }, [isConnected, isAuthenticated, roomId, subscribe, handleNewMessage, handleReadUpdate]);
-
-    // === 읽음/전송 액션 함수 ===
-    // 읽음 요청 전송 (클라이언트 중복 방지 로직도 포함)
-    const markMessageAsRead = (messageId) => {
-        if (!isConnected || !currentAccountId || !roomId) return;  // 인증 되지 않으면 실행 불가
-
-        // 이미 요청을 보낸 메시지는 다시 보내지 않는다
-        if (readRequestCache.has(messageId)) return;
-
-        const readRequest = {
-            roomId: roomId,
-            messageId: messageId,
-            accountId: currentAccountId,    // 현재 로그인 된 사용자 ID
+        wsRef.current = new WebSocket(wsUrl);
+        
+        wsRef.current.onopen = () => {
+            console.log(`[WebSocket] 연결 성공: ${wsUrl}`);
+            setIsConnected(true);
+            
+            // 실제 채팅 서버에서는 이 시점에 채팅방 구독 메시지를 보내게 됩니다.
         };
 
-        // 서버로 읽음 요청을 전송
-        send(`/app/chat/read`, readRequest);
+        wsRef.current.onmessage = (event) => {
+            try {
+                // 에코 서버는 우리가 보낸 JSON 문자열을 그대로 반환합니다.
+                const chatMessage = JSON.parse(event.data);
 
-        // 캐시에 추가하여 중복 요청 차단
-        readRequestCache.add(messageId);
-    };
+                // 유효한 채팅 메시지인지 확인 후 처리
+                if (chatMessage && chatMessage.id && chatMessage.senderId) {
+                    receiveMessage(chatMessage);
+                }
+            } catch (e) {
+                // 서버가 JSON이 아닌 데이터를 반환할 경우 오류 방지
+                console.error("[WebSocket] 메시지 파싱 오류 또는 비정상 데이터:", e);
+            }
+        };
 
-    // 메시지 전송
-    const sendMessage = (messageContent) => {
-        if (!isConnected || !messageContent.trim() || !currentAccountId) return;    // 인증체크 추가함
+        wsRef.current.onclose = () => {
+            console.log("[WebSocket] 연결 종료.");
+            setIsConnected(false);
+            // 실제 앱에서는 연결 끊김 시 재연결 로직을 구현합니다.
+        };
+        
+        wsRef.current.onerror = (error) => {
+            console.error("[WebSocket] 오류 발생:", error);
+        };
+
+        // 클린업: 컴포넌트 언마운트 시 WebSocket 연결 종료
+        return () => {
+            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+                wsRef.current.close();
+            }
+            setIsConnected(false);
+        };
+    }, [receiveMessage]); // roomId는 echo 서버에 필요 없으므로 의존성 배열에서 제외
+
+    // 메시지 전송 함수
+    const sendMessage = useCallback((text) => {
+        // 연결 상태 및 입력 텍스트 유효성 검사
+        if (!isConnected || !text.trim() || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
 
         const chatMessage = {
-            roomId: roomId,
-            senderId: currentAccountId,
-            type: "TEXT",
-            message: messageContent,
+            id: Date.now(), // 고유 ID (실제로는 서버가 할당해야 함)
+            senderId: currentUserId,
+            senderNickname: currentNickname,
+            text: text,
+            timestamp: new Date().toISOString(),
+            roomId: roomId // 메시지에 방 ID 포함 (에코 서버는 무시)
         };
 
-        send(`/app/chat/message`, chatMessage);
-    }
+        try {
+            const messageString = JSON.stringify(chatMessage);
+            // WebSocket을 통해 서버로 메시지 전송
+            wsRef.current.send(messageString);
+            
+            // 에코 서버의 경우, 서버가 메시지를 반환해 주므로 여기서 상태 업데이트를 하지 않습니다.
+        } catch (error) {
+            console.error("[WebSocket] 메시지 전송 오류:", error);
+        }
+    }, [isConnected, currentUserId, currentNickname, roomId]);
 
-    return {
-        isLoading,
-        messages,
-        isConnected,
-        currentAccountId,   // 외부에서도 사용할 수 있게 반환함
-        sendMessage,
-        markMessageAsRead,
-    };
-}
+
+    return { messages, isConnected, sendMessage };
+};
 
 export default useChatRoom;
