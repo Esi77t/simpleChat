@@ -220,3 +220,7 @@ Caused by: org.hibernate.query.sqm.PathElementException: Could not resolve attri
 	at org.springframework.data.jpa.repository.query.PartTreeJpaQuery$CountQueryPreparer.<init>(PartTreeJpaQuery.java:370) ~[spring-data-jpa-3.5.4.jar:3.5.4]
 	at org.springframework.data.jpa.repository.query.PartTreeJpaQuery.<init>(PartTreeJpaQuery.java:103) ~[spring-data-jpa-3.5.4.jar:3.5.4]
 	... 66 common frames omitted
+
+
+Module not found: Error: Can't resolve 'net' in 'E:\Develop\chat_account\web\react-chat\node_modules\stompjs\lib'
+└> stompjs 라이브러리가 Node.js 환경에서 사용되는 모듈을 브라우저 환경에서 찾으려고 시도했기 때문. 그래서 import 경로 수정을 함.
