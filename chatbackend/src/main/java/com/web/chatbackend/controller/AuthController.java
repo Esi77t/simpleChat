@@ -1,6 +1,9 @@
 package com.web.chatbackend.controller;
 
+import com.web.chatbackend.dto.UserLoginRequest;
+import com.web.chatbackend.dto.UserLoginResponse;
 import com.web.chatbackend.dto.UserRegisterRequest;
+import com.web.chatbackend.model.User;
 import com.web.chatbackend.service.UserService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -20,13 +23,35 @@ public class AuthController {
 
     // POST : /api/auth/register : 회원가입 엔드포인트
     @PostMapping("/register")
-    public ResponseEntity<String> register(@Valid @RequestBody UserRegisterRequest request) {
+    public ResponseEntity<?> register(@Valid @RequestBody UserRegisterRequest request) {
         try {
             userService.registerUser(request);
             // 성공 시 201 Created 응답
             return new ResponseEntity<>("회원가입이 성공적으로 완료되었습니다.", HttpStatus.CREATED);
         } catch (IllegalArgumentException e) {
             return new ResponseEntity<>(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    // POST : /api/auth/login : 로그인 엔드포인트
+    // 실제 비밀번호 검증과 JWT 발급은 Spring Security의 인증 필터하고 JWT Service에서 처리
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@Valid @RequestBody UserLoginRequest request) {
+        try {
+            User user = userService.getUserByUserId(request.getUserId());
+
+            String tempToken = "TEMP_JWT_TOKEN_" + user.getUserId();
+
+            UserLoginResponse response = UserLoginResponse.builder()
+                    .userId(user.getUserId())
+                    .nickname(user.getNickname())
+                    .token(tempToken)
+                    .build();
+
+            // 성공 시 200 OK와 함께 토큰 응답
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            return new ResponseEntity<>("로그인 정보가 유효하지 않습니다.", HttpStatus.UNAUTHORIZED);
         }
     }
 }

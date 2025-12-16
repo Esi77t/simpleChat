@@ -1,0 +1,19 @@
+server:
+  port: 8080
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/chat_db?serverTimezone=UTC&characterEncoding=UTF-8
+    username: dbtest
+    password: dbtest
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        default_batch_fetch_size: 100
+jwt:
+  secret: FTULPmjEaYsG9aXbEYXCNoWbMIyicJWk84xR98ToZa3
+  access-token-expiration-seconds: 3600

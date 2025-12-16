@@ -78,8 +78,6 @@ public class UserService implements UserDetailsService {
                 Collections.emptyList()  // Authorities (권한 목록)
         );
     }
-    
-    // 로그인 로직
 
     // 내부 Primary Key(PK) ID로 사용자 엔티티를 조회
     public User getUserById(Long id) {
