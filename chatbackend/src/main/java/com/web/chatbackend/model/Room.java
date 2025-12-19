@@ -40,6 +40,15 @@ public class Room {
         this.password = password;
     }
 
+    /**
+     * 방장 여부 확인
+     * @param userId 확인할 사용자 ID (사용자 ID를 받아 creatorId와 비교)
+     * @return 방장 여부
+     */
+    public boolean isOwner(Long userId) {
+        return this.creatorId != null && this.creatorId.equals(userId);
+    }
+
     // 명시적인 상태 변경 메서드 (방 이름 변경할 때)
     /**
      * 방이름을 변경하는 메서드

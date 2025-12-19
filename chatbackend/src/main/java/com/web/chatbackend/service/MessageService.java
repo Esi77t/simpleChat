@@ -5,11 +5,11 @@ import com.web.chatbackend.dto.RoomMessageResponse;
 import com.web.chatbackend.model.Message;
 import com.web.chatbackend.model.User;
 import com.web.chatbackend.repository.MessageRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.format.DateTimeFormatter;
 import java.util.List;

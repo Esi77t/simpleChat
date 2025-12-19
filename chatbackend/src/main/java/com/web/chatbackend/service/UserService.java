@@ -84,4 +84,13 @@ public class UserService implements UserDetailsService {
         return userRepository.findById(id)
                 .orElseThrow(() -> new UsernameNotFoundException("사용자 PK ID를 찾을 수 없습니다 : " + id));
     }
+
+    // 사용자의 탈퇴 처리를 합니다.
+    // 데이터의 무결성을 위한 삭제보다는 활성 상태값(enabled)을 변경하는 방식이지만 일단 단순 삭제로 정리함
+    public void deleteUser(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("사용자를 찾을 수 없습니다."));
+
+        userRepository.delete(user);
+    }
 }

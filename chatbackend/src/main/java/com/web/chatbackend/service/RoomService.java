@@ -3,17 +3,17 @@ package com.web.chatbackend.service;
 import com.web.chatbackend.dto.RoomCreateRequest;
 import com.web.chatbackend.model.Room;
 import com.web.chatbackend.repository.RoomRepository;
-import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.NoSuchElementException;
 
 @Service
-@Transactional
+@Transactional(readOnly = true)
 @RequiredArgsConstructor    // final 필드를 이용한 생성자 주입
 public class RoomService {
 
@@ -26,6 +26,7 @@ public class RoomService {
      * @param creatorId 방을 생성하는 사용자 ID (User 엔티티의 PK)
      * @return 생성된 Room 엔티티
      */
+    @Transactional
     public Room createRoom(RoomCreateRequest request, Long creatorId) {
         String hashedPassword = null;
 
@@ -87,4 +88,22 @@ public class RoomService {
         // 비공개 방인데 비밀번호를 입력하지 않았을 경우
         return false;
     }
+
+    /**
+     * 채팅방을 삭제
+     * @param roomId 삭제할 방 ID
+     * @param currentUserId 삭제를 요청한 사용자 ID (방장 확인용)
+     */
+    public void deleteRoom(Long roomId, Long currentUserId) {
+        Room room = roomRepository.findById(roomId)
+                .orElseThrow(() -> new IllegalArgumentException("해당방을 찾을 수 없습니다."));
+
+        // 방장(Owner)만 삭제 가능
+        if (!room.isOwner(currentUserId)) {
+            throw new SecurityException("방장만 삭제가 가능합니다.");
+        }
+
+        roomRepository.delete(room);
+    }
+
 }
