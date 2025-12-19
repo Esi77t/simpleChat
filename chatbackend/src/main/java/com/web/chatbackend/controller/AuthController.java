@@ -33,7 +33,7 @@ public class AuthController {
 
     // POST : /api/auth/register : 회원가입 엔드포인트
     @PostMapping("/register")
-    public ResponseEntity<?> register(@Valid @RequestBody UserRegisterRequest request) {
+    public ResponseEntity<String> register(@Valid @RequestBody UserRegisterRequest request) {
         try {
             userService.registerUser(request);
             // 성공 시 201 Created 응답
