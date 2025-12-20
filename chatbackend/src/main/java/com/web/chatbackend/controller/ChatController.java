@@ -29,6 +29,6 @@ public class ChatController {
         }
 
         // /sub/chat/room/{roomId}를 구독 중인 클라이언트들에게 메시지 브로드 캐스트
-        messageTemplate.convertAndSend("/sub/chat/room" + message.getRoomId(),message);
+        messageTemplate.convertAndSend("/sub/chat/room/" + message.getRoomId(),message);
     }
 }

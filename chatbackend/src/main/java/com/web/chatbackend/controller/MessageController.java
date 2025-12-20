@@ -4,10 +4,7 @@ import com.web.chatbackend.dto.RoomMessageResponse;
 import com.web.chatbackend.service.MessageService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -25,6 +22,7 @@ public class MessageController {
      * @param page 페이지 번호(0부터 시작)
      * @param size 한번에 가져올 메시지 수
      */
+    @GetMapping("/{roomId}")
     public ResponseEntity<List<RoomMessageResponse>> getMessageHistory(
             @PathVariable Long roomId,
             @RequestParam(defaultValue = "0") int page,

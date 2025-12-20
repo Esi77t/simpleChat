@@ -48,7 +48,9 @@ public class MessageService {
                 .content(messageDto.getContent())
                 .build();
 
-        messageDto.setTimestamp(messageDto.getTimestamp().formatted(FORMATTER));
+        Message savedMessage = messageRepository.save(message);
+
+        messageDto.setTimestamp(savedMessage.getTimestamp().format(FORMATTER));
 
         return messageRepository.save(message);
     }
