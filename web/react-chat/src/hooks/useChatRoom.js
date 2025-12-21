@@ -1,114 +1,119 @@
-import { useCallback, useEffect, useRef, useState } from "react";
-import useStomp from "./useStomp";
-import { fetchInitialMessages } from "../api/chatApi";
-import useAuth from "./useAuth";
-
-// Mock 채팅 메시지
-const initialMessages = []; 
-
-// 가짜 STOMP 서버 역할
-const mockStompSubscribers = {};
-let messageIdCounter = 4;
+import { useCallback, useEffect, useState } from "react";
 
 const useChatRoom = (roomId, currentUserId, currentNickname) => {
 
- const [messages, setMessages] = useState(initialMessages);
-    const [isConnected, setIsConnected] = useState(false);
-    const wsRef = useRef(null); // WebSocket 인스턴스를 저장할 Ref
+    const [messages, setMessages] = useState([]);
+    const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
-    // 메시지 수신 함수
-    const receiveMessage = useCallback((message) => {
-        setMessages(prevMessages => {
-            // Echo 서버는 자신이 보낸 메시지를 그대로 되돌려주기 때문에, 
-            // 중복 처리 로직이 필요합니다. (최대 1초 내에 동일 메시지 방지)
-            const isDuplicate = prevMessages.some(m => 
-                m.text === message.text && 
-                m.senderId === message.senderId && 
-                (Date.now() - new Date(m.timestamp).getTime() < 1000)
-            );
+    // STOMP 연결 설정
+    const { isConnected, subscribe, send, unsubscribe } = useStomp({
+        debug: false,
+        onConnect: () => {
+            console.log(`[CHAT] 채팅방 ${roomId} 연결 완료`);
 
-            if (isDuplicate) return prevMessages;
-            return [...prevMessages, message];
-        });
-    }, []);
+            // 입장 메시지 전송
+            send('/pub/chat/message', {
+                type: 'ENTER',
+                roomId: roomId,
+                senderId: currentUserId,
+                content: `${currentNickname}님이 입장하셨습니다.`,
+            });
+        },
+        onError: (error) => {
+            console.error('[CHAT] WebSocket 오류:', error);
+        },
+    });
 
-    // 🌟 Native WebSocket 연결/구독
+    // 채팅방 메시지 구독
     useEffect(() => {
-        // 공개 에코 서버를 사용하여 연결 테스트
-        // 실제 백엔드 사용 시: ws://localhost:8080/chat
-        const wsUrl = 'wss://echo.websocket.org'; 
-        console.log(`[WebSocket] ${wsUrl}에 연결 시도...`);
+        if (!isConnected || !roomId) return;
 
-        wsRef.current = new WebSocket(wsUrl);
-        
-        wsRef.current.onopen = () => {
-            console.log(`[WebSocket] 연결 성공: ${wsUrl}`);
-            setIsConnected(true);
-            
-            // 실제 채팅 서버에서는 이 시점에 채팅방 구독 메시지를 보내게 됩니다.
-        };
+        const destination = `/sub/chat/room/${roomId}`;
 
-        wsRef.current.onmessage = (event) => {
-            try {
-                // 에코 서버는 우리가 보낸 JSON 문자열을 그대로 반환합니다.
-                const chatMessage = JSON.parse(event.data);
+        const subscription = subscribe(destination, (message) => {
+            console.log('[CHAT] 메시지 수신:', message);
 
-                // 유효한 채팅 메시지인지 확인 후 처리
-                if (chatMessage && chatMessage.id && chatMessage.senderId) {
-                    receiveMessage(chatMessage);
-                }
-            } catch (e) {
-                // 서버가 JSON이 아닌 데이터를 반환할 경우 오류 방지
-                console.error("[WebSocket] 메시지 파싱 오류 또는 비정상 데이터:", e);
-            }
-        };
+            // 메시지를 상태에 추가
+            const newMessage = {
+                id: Date.now() + Math.random(), // 임시 ID
+                messageId: message.messageId,
+                senderId: message.senderId,
+                senderNickname: message.senderNickname || currentNickname,
+                text: message.content,
+                timestamp: message.timestamp || new Date().toISOString(),
+                type: message.type,
+            };
 
-        wsRef.current.onclose = () => {
-            console.log("[WebSocket] 연결 종료.");
-            setIsConnected(false);
-            // 실제 앱에서는 연결 끊김 시 재연결 로직을 구현합니다.
-        };
-        
-        wsRef.current.onerror = (error) => {
-            console.error("[WebSocket] 오류 발생:", error);
-        };
+            setMessages((prev) => [...prev, newMessage]);
+        });
 
-        // 클린업: 컴포넌트 언마운트 시 WebSocket 연결 종료
+        // 언마운트 시 구독 취소
         return () => {
-            if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
-                wsRef.current.close();
+            if (subscription) {
+                unsubscribe(destination);
             }
-            setIsConnected(false);
         };
-    }, [receiveMessage]); // roomId는 echo 서버에 필요 없으므로 의존성 배열에서 제외
+    }, [isConnected, roomId, subscribe, unsubscribe, currentNickname]);
 
-    // 메시지 전송 함수
-    const sendMessage = useCallback((text) => {
-        // 연결 상태 및 입력 텍스트 유효성 검사
-        if (!isConnected || !text.trim() || !wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) return;
+    // 이전 메시지 이력 불러오기
+    useEffect(() => {
+        const loadMessageHistory = async () => {
+            if (!roomId) return;
 
-        const chatMessage = {
-            id: Date.now(), // 고유 ID (실제로는 서버가 할당해야 함)
-            senderId: currentUserId,
-            senderNickname: currentNickname,
-            text: text,
-            timestamp: new Date().toISOString(),
-            roomId: roomId // 메시지에 방 ID 포함 (에코 서버는 무시)
+            setIsLoadingHistory(true);
+            try {
+                const history = await chatApi.getMessageHistory(roomId, 0, 50);
+
+                // 메시지 포맷 변환
+                const formattedMessages = history.map((msg) => ({
+                    id: msg.messageId,
+                    messageId: msg.messageId,
+                    senderId: msg.senderId,
+                    senderNickname: msg.senderNickname,
+                    text: msg.content,
+                    timestamp: msg.timestamp,
+                    type: 'TALK',
+                }));
+
+                // 오래된 메시지부터 표시 (역순 정렬)
+                setMessages(formattedMessages.reverse());
+                console.log(`[CHAT] ${formattedMessages.length}개의 이전 메시지 로드 완료`);
+            } catch (error) {
+                console.error('[CHAT] 메시지 이력 로드 실패:', error);
+            } finally {
+                setIsLoadingHistory(false);
+            }
         };
 
-        try {
-            const messageString = JSON.stringify(chatMessage);
-            // WebSocket을 통해 서버로 메시지 전송
-            wsRef.current.send(messageString);
-            
-            // 에코 서버의 경우, 서버가 메시지를 반환해 주므로 여기서 상태 업데이트를 하지 않습니다.
-        } catch (error) {
-            console.error("[WebSocket] 메시지 전송 오류:", error);
-        }
-    }, [isConnected, currentUserId, currentNickname, roomId]);
+        loadMessageHistory();
+    }, [roomId]);
 
+    // 메시지 전송
+    const sendMessage = useCallback(
+        (text) => {
+            if (!isConnected || !text.trim()) {
+                console.warn('[CHAT] 메시지 전송 불가 (연결 안됨 또는 빈 메시지)');
+                return;
+            }
 
-    return { messages, isConnected, sendMessage };
+            const messageData = {
+                type: 'TALK',
+                roomId: roomId,
+                senderId: currentUserId,
+                content: text.trim(),
+            };
+
+            send('/pub/chat/message', messageData);
+        },
+        [isConnected, roomId, currentUserId, send]
+    );
+
+    return {
+        messages,
+        isConnected,
+        isLoadingHistory,
+        sendMessage,
+    };
 };
 
 export default useChatRoom;
