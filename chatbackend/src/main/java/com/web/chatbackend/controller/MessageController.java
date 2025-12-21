@@ -22,7 +22,7 @@ public class MessageController {
      * @param page 페이지 번호(0부터 시작)
      * @param size 한번에 가져올 메시지 수
      */
-    @GetMapping("/{roomId}")
+    @GetMapping("/{roomId}/history")
     public ResponseEntity<List<RoomMessageResponse>> getMessageHistory(
             @PathVariable Long roomId,
             @RequestParam(defaultValue = "0") int page,

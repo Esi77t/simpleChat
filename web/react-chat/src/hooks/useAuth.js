@@ -1,7 +1,5 @@
-import axios from "axios";
 import { useEffect, useState } from "react"
-
-const REAL_TOKEN_FOR_TESTING = "YOUR_ACTUAL_JWT_TOKEN_HERE";
+import chatApi from "../api/chatApi";
 
 const useAuth = () => {
     const [accountId, setAccountId] = useState(null);
@@ -9,7 +7,7 @@ const useAuth = () => {
     const [isAuthenticated, setIsAuthenticated] = useState(false);
 
     useEffect(() => {
-        // 새로고침을 하면 localstorage/sessionstorage에서 토큰과 사용자 정보를 복구
+        // localStorage에서 토큰과 사용자 정보 복구
         const storedAccountId = localStorage.getItem('accountId');
         const storedNickname = localStorage.getItem('nickname');
         const storedToken = localStorage.getItem('jwt_token');
@@ -23,26 +21,31 @@ const useAuth = () => {
 
     // 로그인 함수 처리
     const login = async (userId, password) => {
-        console.log(`[AUTH] 로그인 시도 : ${userId}`);
+        try {
+            console.log(`[AUTH] 로그인 시도 : ${userId}`);
 
-        // 실제 API 호출 로직으로 교체 예정
-        const receivedJwtToken = (REAL_TOKEN_FOR_TESTING === "YOUR_ACTUAL_JWT_TOKEN_HERE") ? ('mock-jwt-token-for-' + userId) : REAL_TOKEN_FOR_TESTING;
+            const result = await chatApi.login(userId, password);
 
-        // 임시 더미 데이터
-        const dummyAccountId = 'user-' + userId.toLowerCase();
-        const dummyNickname = userId;
+            if (result.success) {
+                // 로컬 스토리지에 저장
+                localStorage.setItem('accountId', result.userId);
+                localStorage.setItem('nickname', result.nickname);
+                localStorage.setItem('jwt_token', result.token);
 
-        // 성공했을 때
-        localStorage.setItem('accountId', dummyAccountId);
-        localStorage.setItem('nickname', dummyNickname);
-        localStorage.setItem('jwt_token', receivedJwtToken);
+                // 상태 업데이트
+                setAccountId(result.userId);
+                setNickname(result.nickname);
+                setIsAuthenticated(true);
 
-        setAccountId(dummyAccountId);
-        setNickname(dummyNickname);
-        setIsAuthenticated(true);
-        console.log(`[AUTH] 로그인 성공. 토큰 : ${receivedJwtToken.substring(0, 20)}...`);
-        return true;
-    }
+                console.log('[AUTH] 로그인 성공');
+                return true;
+            }
+            return false;
+        } catch (error) {
+            console.error('[AUTH] 로그인 실패 : ', error.message);
+            throw error;
+        }
+    };
 
     // 로그아웃 함수 처리
     const logout = async () => {
